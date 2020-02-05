@@ -56,9 +56,15 @@ echo "conn $TUNNEL_NAME
   keyexchange=ikev2
   dpdaction=restart
   mark=$MARK" > /etc/strongswan/ipsec.d/$TUNNEL_NAME.conf 
-  
 echo $ETH0_PUBLIC $REMOTE_PEER_IP : PSK "$PSK" >> /etc/strongswan/ipsec.secrets
 
+echo "creating tunnel interface"
+ip tunnel add $TUNNEL_ID local $ETH0_IP remote $REMOTE_PEER_IP mode vti key $MARK
+ifup $TUNNEL_ID
+chmod +x /etc/rc.d/rc.local
+echo ip tunnel add $TUNNEL_ID local $ETH0_IP remote $REMOTE_PEER_IP mode vti key $MARK >> /etc/rc.d/rc.local
+
+echo "bringing up tunnel"
 if [ $(find /etc/strongswan/ipsec.conf) ] ;  then
 strongswan update
 strongswan up $TUNNEL_NAME
@@ -71,11 +77,6 @@ iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set
 systemctl enable --now strongswan
 sysctl -p
 fi
-
-ip tunnel add $TUNNEL_ID local $ETH0_IP remote $REMOTE_PEER_IP mode vti key $MARK
-ifup $TUNNEL_ID
-chmod +x /etc/rc.d/rc.local
-echo ip tunnel add $TUNNEL_ID local $ETH0_IP remote $REMOTE_PEER_IP mode vti key $MARK >> /etc/rc.d/rc.local
 
 else 
 echo "Running this script again could cause issues, exiting script"
