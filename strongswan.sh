@@ -1,20 +1,22 @@
 #!/bin/bash
 # This Script configs strongswan and Quagga on Centos 7
 # CHANGE THE VARIABLES BELOW
-HOSTNAME="TEST-GW01"
-TUNNEL_NAME="shanghai-hq"
-TUNNEL_ID="vti11"
-TUNNEL_LOCAL_IP="192.168.222.1"
-TUNNEL_PEER_IP="192.168.222.2"
-ETH0_IP="10.101.1.87"
-ETH0_PUBLIC="3.123.254.173"
-REMOTE_PEER_IP="210.13.83.19"
-MARK="11"
+HOSTNAME="BRSP-GW01"
+TUNNEL_NAME="brsp2"
+TUNNEL_ID="vti12"
+TUNNEL_LOCAL_IP="10.254.10.8"
+TUNNEL_PEER_IP="10.254.10.9"
+ETH0_IP="10.14.130.13"
+ETH0_PUBLIC="191.232.180.138"
+REMOTE_INSIDE_IP="200.186.15.90"
+REMOTE_PEER_IP="200.186.15.90"
+MARK="12"
 PSK="ScarFace14!"
 
 FIRST_RUN=1
 
 # Install and Configure Strongswan
+echo "configuration strongswan"
 if ! [ $(find /etc/strongswan/ipsec.conf) ] ;  then
 yum install -y epel-release
 yum install strongswan -y
@@ -47,15 +49,15 @@ echo "conn $TUNNEL_NAME
   leftid=$ETH0_PUBLIC
   leftsubnet=0.0.0.0/0
   right=$REMOTE_PEER_IP
-  rightid=$REMOTE_PEER_IP
+  rightid=$REMOTE_INSIDE_IP
   rightsubnet=0.0.0.0/0
   auto=start
   authby=secret
   keyexchange=ikev2
   dpdaction=restart
-  mark=$MARK" > /etc/ipsec.d/$TUNNEL_NAME.conf 
+  mark=$MARK" > /etc/strongswan/ipsec.d/$TUNNEL_NAME.conf 
   
-echo $ETH0_PUBLIC $REMOTE_PEER_IP : PSK $PSK >> /etc/strongswan/ipsec.secrets
+echo $ETH0_PUBLIC $REMOTE_PEER_IP : PSK "$PSK" >> /etc/strongswan/ipsec.secrets
 
 if [ $(find /etc/strongswan/ipsec.conf) ] ;  then
 strongswan update
@@ -80,6 +82,7 @@ echo "Running this script again could cause issues, exiting script"
 fi
 
 # Install Quagga
+echo "configuring quagga"
 if ! [ $(find /etc/quagga/zebra.conf) ] ;  then
 yum install quagga-0.99.22.4 -y
 cp /usr/share/doc/quagga-0.99.22.4/zebra.conf.sample /etc/quagga/zebra.conf
