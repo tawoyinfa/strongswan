@@ -96,5 +96,5 @@ chmod -R 777 /etc/quagga/
 #setsebool zebra_write_config=1
 fi
 
-#echo $HOSTNAME >> /etc/hostname
-#hostname $HOSTNAME
+echo $HOSTNAME >> /etc/hostname
+hostname $HOSTNAME
